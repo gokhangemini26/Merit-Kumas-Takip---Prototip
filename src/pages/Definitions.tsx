@@ -62,11 +62,25 @@ export default function Definitions() {
   const handleSave = async () => {
     setSubmitting(true);
     try {
-      const table = activeTab === 'suppliers' ? 'suppliers' : activeTab === 'fabrics' ? 'fabric_types' : 'size_types';
+      let payload = { ...formData };
       
+      // Sanitize payload based on tab to avoid extra field errors
+      if (activeTab === 'fabrics') {
+        payload = { name: formData.name, code: formData.code };
+      } else if (activeTab === 'suppliers') {
+        payload = { 
+          name: formData.name, 
+          phone: formData.phone, 
+          email: formData.email, 
+          address: formData.address 
+        };
+      } else if (activeTab === 'sizes') {
+        payload = { name: formData.name, sizes: formData.sizes };
+      }
+
       const { error } = await supabase
         .from(table)
-        .insert(formData);
+        .insert(payload);
 
       if (error) throw error;
 
