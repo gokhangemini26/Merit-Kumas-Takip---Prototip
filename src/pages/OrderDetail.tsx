@@ -38,6 +38,7 @@ export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [order, setOrder] = React.useState<OrderWithItems | null>(null);
+  const [deliveries, setDeliveries] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -51,6 +52,7 @@ export default function OrderDetail() {
             *,
             items:order_items(
               *,
+              fabric_type:fabric_types(name),
               sizes:order_item_sizes(*)
             )
           `)
@@ -59,6 +61,22 @@ export default function OrderDetail() {
 
         if (error) throw error;
         setOrder(data);
+
+        // Fetch deliveries linked to this order's items
+        if (data.items && data.items.length > 0) {
+          const itemIds = data.items.map((i: any) => i.id);
+          const { data: deliveryData } = await supabase
+            .from('deliveries')
+            .select('*, items:delivery_items(*)')
+            .in('items.order_item_id', itemIds);
+          
+          // Filter out deliveries that have no matching items for this order (post-query filter as Supabase doesn't support nested filter for many-to-many joined tables in basic select easily)
+          const filteredDeliveries = deliveryData?.filter(d => 
+            d.items?.some((di: any) => itemIds.includes(di.order_item_id))
+          ) || [];
+          
+          setDeliveries(filteredDeliveries);
+        }
       } catch (err: any) {
         console.error('Fetch Error:', err);
         setError(err.message || 'Sipariş detayları yüklenirken bir hata oluştu.');
@@ -152,7 +170,7 @@ export default function OrderDetail() {
                               <div className="font-semibold text-slate-900">{item.model_code}</div>
                               <div className="text-slate-500 text-xs">{item.color_name}</div>
                             </td>
-                            <td className="px-6 py-4 text-slate-600">{item.fabric_type_id}</td>
+                            <td className="px-6 py-4 text-slate-600">{item.fabric_type?.name || '-'}</td>
                             <td className="px-6 py-4 text-right font-mono">{item.ordered_kg.toFixed(2)} kg</td>
                             <td className="px-6 py-4 text-right font-mono">{formatCurrency(item.unit_price)}</td>
                             <td className="px-6 py-4 text-right font-bold text-[#f97316]">
@@ -234,13 +252,45 @@ export default function OrderDetail() {
               <CardDescription>Bu siparişe bağlı gerçekleşen tüm teslimat listesi.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-slate-400">
-                <Truck className="mx-auto h-12 w-12 opacity-20 mb-4" />
-                <p>Henüz bir teslimat kaydı bulunmamaktadır.</p>
-                <Button variant="outline" className="mt-4 gap-2 border-dashed" onClick={() => navigate(`/teslimler/yeni?orderId=${order.id}`)}>
-                  <Plus size={16} /> Teslimat Formu Yükle
-                </Button>
-              </div>
+              {deliveries.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 border-y text-slate-500 font-medium">
+                      <tr>
+                        <th className="px-6 py-3 text-left">Teslimat No</th>
+                        <th className="px-6 py-3 text-left">İrsaliye</th>
+                        <th className="px-6 py-3 text-left">Tarih</th>
+                        <th className="px-6 py-3 text-right">Miktar (Kg)</th>
+                        <th className="px-6 py-3 text-center">Durum</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {deliveries.map((delivery) => {
+                        const totalKg = delivery.items?.reduce((sum: number, item: any) => sum + item.delivered_kg, 0) || 0;
+                        return (
+                          <tr key={delivery.id} className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => navigate(`/teslimler/${delivery.id}`)}>
+                            <td className="px-6 py-4 font-bold text-blue-600">{delivery.delivery_no}</td>
+                            <td className="px-6 py-4 text-slate-500">{delivery.waybill_no || '-'}</td>
+                            <td className="px-6 py-4 text-slate-600">{formatDate(delivery.delivery_date)}</td>
+                            <td className="px-6 py-4 text-right font-mono font-bold">{totalKg.toFixed(2)} kg</td>
+                            <td className="px-6 py-4 text-center">
+                              <Badge variant="secondary" className="text-[10px]">{delivery.status}</Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-slate-400">
+                  <Truck className="mx-auto h-12 w-12 opacity-20 mb-4" />
+                  <p>Henüz bir teslimat kaydı bulunmamaktadır.</p>
+                  <Button variant="outline" className="mt-4 gap-2 border-dashed" onClick={() => navigate(`/teslimler/yeni?orderId=${order?.id}`)}>
+                    <Plus size={16} /> Teslimat Formu Yükle
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

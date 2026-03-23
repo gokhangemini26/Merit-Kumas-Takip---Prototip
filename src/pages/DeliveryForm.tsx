@@ -363,10 +363,10 @@ export default function DeliveryForm() {
                               <Input value={row.color_name} onChange={e => updateManualRow(idx, 'color_name', e.target.value)} placeholder="Renk..." className="h-8 text-xs" />
                             </td>
                             <td className="px-2 py-2">
-                              <Input type="number" value={row.delivered_kg} onChange={e => updateManualRow(idx, 'delivered_kg', parseFloat(e.target.value))} className="h-8 text-xs text-right" />
+                              <Input type="number" value={row.delivered_kg} onChange={e => updateManualRow(idx, 'delivered_kg', parseFloat(e.target.value) || 0)} className="h-8 text-xs text-right" />
                             </td>
                             <td className="px-2 py-2">
-                              <Input type="number" value={row.roll_count} onChange={e => updateManualRow(idx, 'roll_count', parseInt(e.target.value))} className="h-8 text-xs text-right" />
+                              <Input type="number" value={row.roll_count} onChange={e => updateManualRow(idx, 'roll_count', parseInt(e.target.value) || 0)} className="h-8 text-xs text-right" />
                             </td>
                             <td className="px-2 py-2 text-center">
                               <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400" onClick={() => removeManualRow(idx)}>
