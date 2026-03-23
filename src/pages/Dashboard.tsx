@@ -114,6 +114,7 @@ export default function Dashboard() {
           trend="+12%" 
           trendUp={true}
           color="blue"
+          onClick={() => navigate('/siparisler')}
         />
         <KPIItem 
           title="Aylık Teslimat" 
@@ -122,6 +123,7 @@ export default function Dashboard() {
           trend="+5.4%" 
           trendUp={true}
           color="orange"
+          onClick={() => navigate('/teslimatlar')}
         />
         <KPIItem 
           title="Bekleyen Ödemeler" 
@@ -130,6 +132,7 @@ export default function Dashboard() {
           trend="-2.1%" 
           trendUp={false}
           color="red"
+          onClick={() => navigate('/odemeler')}
         />
         <KPIItem 
           title="Tamamlanma Oranı" 
@@ -138,6 +141,7 @@ export default function Dashboard() {
           trend="+8%" 
           trendUp={true}
           color="green"
+          onClick={() => navigate('/siparisler')}
         />
       </div>
 
@@ -276,12 +280,14 @@ export default function Dashboard() {
               title="Vadesi Geçen Ödemeler" 
               desc="3 adet siparişin vade tarihi geçti." 
               color="red"
+              onClick={() => navigate('/odemeler')}
             />
             <AlertItem 
               icon={Clock} 
               title="Bekleyen Teslimatlar" 
               desc="Onay bekleyen 5 yeni teslimat formu var." 
               color="blue"
+              onClick={() => navigate('/teslimatlar')}
             />
             <AlertItem 
               icon={CheckCircle2} 
@@ -296,7 +302,7 @@ export default function Dashboard() {
   );
 }
 
-function KPIItem({ title, value, icon: Icon, trend, trendUp, color }: any) {
+function KPIItem({ title, value, icon: Icon, trend, trendUp, color, onClick }: any) {
   const colorMap = {
     blue: 'bg-blue-50 text-blue-600 border-blue-100',
     orange: 'bg-orange-50 text-orange-600 border-orange-100',
@@ -305,7 +311,10 @@ function KPIItem({ title, value, icon: Icon, trend, trendUp, color }: any) {
   };
 
   return (
-    <Card className="glass-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+    <Card 
+      className="glass-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+      onClick={onClick}
+    >
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className={cn("p-2.5 rounded-xl border", colorMap[color as keyof typeof colorMap])}>
@@ -323,7 +332,7 @@ function KPIItem({ title, value, icon: Icon, trend, trendUp, color }: any) {
   );
 }
 
-function AlertItem({ icon: Icon, title, desc, color }: any) {
+function AlertItem({ icon: Icon, title, desc, color, onClick }: any) {
   const colors = {
     red: 'bg-red-50 text-red-600',
     blue: 'bg-blue-50 text-blue-600',
@@ -331,7 +340,10 @@ function AlertItem({ icon: Icon, title, desc, color }: any) {
   };
 
   return (
-    <div className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 bg-white hover:border-slate-200 transition-colors cursor-pointer group">
+    <div 
+      className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 bg-white hover:border-slate-200 transition-colors cursor-pointer group"
+      onClick={onClick}
+    >
       <div className={cn("p-2 rounded-lg shrink-0", colors[color as keyof typeof colors])}>
         <Icon size={20} />
       </div>
