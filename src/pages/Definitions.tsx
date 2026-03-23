@@ -157,7 +157,7 @@ export default function Definitions() {
             {fabrics.map(f => (
               <Card key={f.id} className="glass-card group hover:border-orange-200 transition-all">
                 <CardContent className="p-4 flex items-center justify-between">
-                  <span className="font-bold text-slate-800">{f.name}</span>
+                  <span className="font-bold text-slate-800">[{f.code}] {f.name}</span>
                   <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all" onClick={() => handleDelete(f.id)}>
                     <Trash2 size={16} />
                   </Button>
