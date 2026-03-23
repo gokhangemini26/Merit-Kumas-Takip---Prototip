@@ -220,10 +220,16 @@ export default function Definitions() {
                 </div>
               </>
             ) : activeTab === 'fabrics' ? (
-              <div className="grid gap-2">
-                <Label>Kumaş Adı</Label>
-                <Input value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Örn: %100 Pamuk Süprem" />
-              </div>
+              <>
+                <div className="grid gap-2">
+                  <Label>Kumaş Kodu</Label>
+                  <Input value={formData.code || ''} onChange={e => setFormData({...formData, code: e.target.value})} placeholder="Örn: D.FACE" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Kumaş Adı</Label>
+                  <Input value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Örn: %100 Pamuk Süprem" />
+                </div>
+              </>
             ) : (
               <>
                 <div className="grid gap-2">
