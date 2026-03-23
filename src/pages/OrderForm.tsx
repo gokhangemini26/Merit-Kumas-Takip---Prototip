@@ -107,7 +107,7 @@ export default function OrderForm() {
         { 
           model_code: '', 
           color_name: '', 
-          fabric_type_id: 'default', 
+          fabric_type_id: '', 
           ordered_kg: 0, 
           unit_price: 0, 
           currency: 'TRY',
