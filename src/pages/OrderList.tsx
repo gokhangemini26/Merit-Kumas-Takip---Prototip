@@ -59,6 +59,7 @@ export default function OrderList() {
         .from('orders')
         .select(`
           *,
+          supplier:suppliers(name),
           items:order_items(*)
         `)
         .order('created_at', { ascending: false });
@@ -81,9 +82,9 @@ export default function OrderList() {
       header: 'Sipariş No',
       cell: info => <span className="font-bold text-slate-900">{info.getValue()}</span>,
     }),
-    columnHelper.accessor('supplier_id', {
+    columnHelper.accessor('supplier.name', {
       header: 'Tedarikçi',
-      cell: info => <span className="uppercase">{info.getValue()}</span>,
+      cell: info => <span className="uppercase">{info.getValue() || info.row.original.supplier_id}</span>,
     }),
     columnHelper.accessor('order_date', {
       header: ({ column }) => (

@@ -50,6 +50,7 @@ export default function OrderDetail() {
           .from('orders')
           .select(`
             *,
+            supplier:suppliers(name),
             items:order_items(
               *,
               fabric_type:fabric_types(name),
@@ -62,15 +63,13 @@ export default function OrderDetail() {
         if (error) throw error;
         setOrder(data);
 
-        // Fetch deliveries linked to this order's items
+        // Fetch all deliveries and filter for this order's items
         if (data.items && data.items.length > 0) {
           const itemIds = data.items.map((i: any) => i.id);
           const { data: deliveryData } = await supabase
             .from('deliveries')
-            .select('*, items:delivery_items(*)')
-            .in('items.order_item_id', itemIds);
+            .select('*, items:delivery_items(*)');
           
-          // Filter out deliveries that have no matching items for this order (post-query filter as Supabase doesn't support nested filter for many-to-many joined tables in basic select easily)
           const filteredDeliveries = deliveryData?.filter(d => 
             d.items?.some((di: any) => itemIds.includes(di.order_item_id))
           ) || [];
@@ -207,7 +206,7 @@ export default function OrderDetail() {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-slate-500 flex items-center gap-2"><User size={14} /> Tedarikçi</span>
-                    <span className="font-semibold">{order.supplier_id}</span>
+                    <span className="font-semibold">{order.supplier?.name || order.supplier_id}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-slate-500 flex items-center gap-2"><Calendar size={14} /> Sipariş Tarihi</span>

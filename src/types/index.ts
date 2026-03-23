@@ -112,9 +112,11 @@ export interface Payment {
 
 // Helper types for joins
 export type OrderItemWithSizes = OrderItem & { 
-  sizes?: OrderItemSize[] 
+  sizes?: OrderItemSize[];
+  fabric_type?: { name: string };
 };
 
 export type OrderWithItems = Order & { 
-  items?: OrderItemWithSizes[] 
+  items?: OrderItemWithSizes[];
+  supplier?: { name: string };
 };
