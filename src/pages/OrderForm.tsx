@@ -19,7 +19,7 @@ import {
   parseSizeBreakdownFromText,
   cn 
 } from '@/lib/utils';
-import type { OrderStatus } from '@/types';
+import type { OrderStatus, Supplier, FabricType } from '@/types';
 import { supabase } from '@/lib/supabase';
 
 // UI Components
@@ -82,6 +82,20 @@ export default function OrderForm() {
   const [step, setStep] = React.useState(1);
   const [bulkPasteValue, setBulkPasteValue] = React.useState('');
   const [activeItemIndex, setActiveItemIndex] = React.useState<number | null>(null);
+  const [suppliers, setSuppliers] = React.useState<Supplier[]>([]);
+  const [fabricTypes, setFabricTypes] = React.useState<FabricType[]>([]);
+
+  React.useEffect(() => {
+    const loadMetadata = async () => {
+      const [sRes, fRes] = await Promise.all([
+        supabase.from('suppliers').select('*').order('name'),
+        supabase.from('fabric_types').select('*').order('name')
+      ]);
+      if (sRes.data) setSuppliers(sRes.data);
+      if (fRes.data) setFabricTypes(fRes.data);
+    };
+    loadMetadata();
+  }, []);
 
   const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -112,6 +126,8 @@ export default function OrderForm() {
   const orderDate = watch('order_date');
   const paymentTermDays = watch('payment_term_days');
   const items = watch('items');
+  const supplierId = watch('supplier_id');
+  const deliveryDueDate = watch('delivery_due_date');
 
   // Auto-calculate payment due date
   React.useEffect(() => {
@@ -129,10 +145,10 @@ export default function OrderForm() {
           order_no: data.order_no,
           supplier_id: data.supplier_id,
           order_date: data.order_date,
-          delivery_due_date: data.delivery_due_date,
+          delivery_due_date: data.delivery_due_date || null,
           payment_term_days: data.payment_term_days,
-          payment_due_date: data.payment_due_date,
-          notes: data.notes,
+          payment_due_date: data.payment_due_date || null,
+          notes: data.notes || null,
           status: 'BEKLEMEDE' as OrderStatus
         })
         .select()
@@ -238,9 +254,10 @@ export default function OrderForm() {
                     <SelectValue placeholder="Tedarikçi seçin..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="supplier-1">Tolga Boyhanesi</SelectItem>
-                    <SelectItem value="supplier-2">Öz-Emr Kumaş</SelectItem>
-                    <SelectItem value="new">+ Yeni Tedarikçi Ekle</SelectItem>
+                    {suppliers.map(s => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                    {suppliers.length === 0 && <SelectItem value="none" disabled>Henüz tedarikçi yok</SelectItem>}
                   </SelectContent>
                 </Select>
                 {errors.supplier_id && <p className="text-red-500 text-xs">{errors.supplier_id.message}</p>}
@@ -322,8 +339,10 @@ export default function OrderForm() {
                           <SelectValue placeholder="Seçin..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="fabric-1">D.FACE</SelectItem>
-                          <SelectItem value="fabric-2">SUPREM</SelectItem>
+                          {fabricTypes.map(f => (
+                            <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                          ))}
+                          {fabricTypes.length === 0 && <SelectItem value="none" disabled>Kumaş tipi yok</SelectItem>}
                         </SelectContent>
                       </Select>
                     </div>
@@ -442,12 +461,16 @@ export default function OrderForm() {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-b border-slate-100">
                   <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase">Sipariş No</p>
-                    <p className="font-semibold">{watch('order_no')}</p>
+                    <p className="text-xs text-slate-500 font-bold uppercase">Tedarikçi</p>
+                    <p className="font-semibold uppercase">{suppliers.find(s => s.id === supplierId)?.name || 'Seçilmedi'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 font-bold uppercase">Tarih</p>
                     <p className="font-semibold">{watch('order_date')}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 font-bold uppercase">Teslimat</p>
+                    <p className="font-semibold">{deliveryDueDate || '-'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 font-bold uppercase">Vade</p>
