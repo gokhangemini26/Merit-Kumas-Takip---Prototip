@@ -62,6 +62,7 @@ export default function Definitions() {
   const handleSave = async () => {
     setSubmitting(true);
     try {
+      const table = activeTab === 'suppliers' ? 'suppliers' : activeTab === 'fabrics' ? 'fabric_types' : 'size_types';
       let payload = { ...formData };
       
       // Sanitize payload based on tab to avoid extra field errors
