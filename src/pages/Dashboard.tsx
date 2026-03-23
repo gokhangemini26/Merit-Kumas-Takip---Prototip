@@ -51,34 +51,68 @@ export default function Dashboard() {
   React.useEffect(() => {
     async function fetchDashboardData() {
       try {
-        // 1. Fetch Orders
-        const { data: orders } = await supabase.from('orders').select('*');
+        // 1. Fetch Orders and items
+        const { data: orders } = await supabase.from('orders').select('*, items:order_items(*)').order('created_at', { ascending: false });
         
-        // 2. Fetch Deliveries (Last 30 days)
-        const { data: deliveries } = await supabase.from('deliveries').select('*');
+        // 2. Fetch Deliveries and items
+        const { data: deliveries } = await supabase.from('deliveries').select('*, items:delivery_items(*)');
         
         // 3. Fetch Payments
-        await supabase.from('payments').select('*');
+        const { data: payments } = await supabase.from('payments').select('*');
 
         // Calculate Stats
-        const active = orders?.filter(o => o.status !== 'TAMAMLANDI').length || 0;
-        const totalKg = deliveries?.reduce((sum, d) => sum + (d.total_kg || 0), 0) || 0;
+        const active = orders?.filter(o => o.status !== 'TAMAMLANDI' && o.status !== 'İPTAL').length || 0;
         
-        // Simplified chart data (Last 6 months)
-        const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran'];
-        const mockChartData = months.map(m => ({
-          name: m,
-          siparis: Math.floor(Math.random() * 50) + 10,
-          teslimat: Math.floor(Math.random() * 40) + 5,
-        }));
+        // Monthly delivery kg (current month)
+        const currentMonth = new Date().getMonth();
+        const monthlyKg = deliveries?.reduce((sum, d) => {
+          const dDate = new Date(d.delivery_date);
+          if (dDate.getMonth() === currentMonth) {
+            const dSum = d.items?.reduce((s: number, i: any) => s + (i.delivered_kg || 0), 0) || 0;
+            return sum + dSum;
+          }
+          return sum;
+        }, 0) || 0;
+
+        // Pending payments
+        const totalOrderValue = orders?.reduce((sum, o) => {
+          const oSum = o.items?.reduce((s: number, i: any) => s + (i.ordered_kg * i.unit_price), 0) || 0;
+          return sum + oSum;
+        }, 0) || 0;
+        const totalPaid = payments?.filter(p => p.status === 'ÖDENDI').reduce((s, p) => s + Number(p.amount), 0) || 0;
+        const pendingValue = totalOrderValue - totalPaid;
+
+        // Overall completion rate
+        const totalOrderedKg = orders?.reduce((sum, o) => sum + (o.items?.reduce((s: number, i: any) => s + i.ordered_kg, 0) || 0), 0) || 1;
+        const totalDeliveredKg = deliveries?.reduce((sum, d) => sum + (d.items?.reduce((s: number, i: any) => s + i.delivered_kg, 0) || 0), 0) || 0;
+        const compRate = Math.round((totalDeliveredKg / totalOrderedKg) * 100);
+
+        // Chart data (Last 6 months)
+        const monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+        const chartDat = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date();
+          d.setMonth(d.getMonth() - i);
+          const monthIdx = d.getMonth();
+          const monthName = monthNames[monthIdx];
+          
+          const monthOrders = orders?.filter(o => new Date(o.order_date).getMonth() === monthIdx).length || 0;
+          const monthDelivs = deliveries?.filter(del => new Date(del.delivery_date).getMonth() === monthIdx).length || 0;
+          
+          chartDat.push({
+            name: monthName,
+            siparis: monthOrders,
+            teslimat: monthDelivs
+          });
+        }
 
         setStats({
           activeOrders: active,
-          monthlyKg: totalKg,
-          pendingPayments: 125400, // Mock for now
-          completionRate: 78
+          monthlyKg: Math.round(monthlyKg),
+          pendingPayments: pendingValue,
+          completionRate: compRate
         });
-        setChartData(mockChartData);
+        setChartData(chartDat);
         setRecentOrders(orders?.slice(0, 5) || []);
 
     } finally {
@@ -201,9 +235,9 @@ export default function Dashboard() {
               <PieChart>
                 <Pie
                   data={[
-                    { name: 'Beklemede', value: 40 },
-                    { name: 'Üretimde', value: 30 },
-                    { name: 'Teslim Edildi', value: 30 },
+                    { name: 'Beklemede', value: recentOrders.filter(o => o.status === 'BEKLEMEDE').length },
+                    { name: 'Üretimde', value: recentOrders.filter(o => o.status === 'ÜRETİMDE').length },
+                    { name: 'Diğer', value: recentOrders.filter(o => !['BEKLEMEDE', 'ÜRETİMDE'].includes(o.status)).length },
                   ]}
                   innerRadius={60}
                   outerRadius={80}
@@ -277,23 +311,24 @@ export default function Dashboard() {
           <CardContent className="space-y-4">
             <AlertItem 
               icon={AlertCircle} 
-              title="Vadesi Geçen Ödemeler" 
-              desc="3 adet siparişin vade tarihi geçti." 
+              title="Vadesi Yaklaşan Ödemeler" 
+              desc={`${recentOrders.filter(o => o.payment_due_date && new Date(o.payment_due_date) < new Date()).length} adet siparişin vadesi yaklaştı veya geçti.`} 
               color="red"
               onClick={() => navigate('/odemeler')}
             />
             <AlertItem 
               icon={Clock} 
               title="Bekleyen Teslimatlar" 
-              desc="Onay bekleyen 5 yeni teslimat formu var." 
+              desc="Sistemde henüz eşleşmemiş veya yeni teslimatlar mevcut." 
               color="blue"
               onClick={() => navigate('/teslimler')}
             />
             <AlertItem 
               icon={CheckCircle2} 
-              title="Tamamlanan Kalemler" 
-              desc="Bugün 12 kalem ürün sorunsuz kapatıldı." 
+              title="Aktif Sipariş Takibi" 
+              desc={`${stats.activeOrders} adet sipariş şu an üretim sürecinde.`} 
               color="green"
+              onClick={() => navigate('/siparisler')}
             />
           </CardContent>
         </Card>

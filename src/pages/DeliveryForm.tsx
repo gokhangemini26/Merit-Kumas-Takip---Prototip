@@ -130,6 +130,13 @@ export default function DeliveryForm() {
         .insert(deliveryItems);
 
       if (itemsError) throw itemsError;
+      
+      if (orderInfo) {
+        const termDays = orderInfo.payment_term_days || 60;
+        const dDate = new Date(deliveryDate);
+        dDate.setDate(dDate.getDate() + termDays);
+        await supabase.from('orders').update({ payment_due_date: dDate.toISOString().split('T')[0] }).eq('id', orderInfo.id);
+      }
 
       alert('Teslimat başarıyla kaydedildi.');
       navigate('/teslimler');

@@ -9,8 +9,7 @@ import DeliveryForm from './pages/DeliveryForm';
 import Payments from './pages/Payments';
 import Definitions from './pages/Definitions';
 
-// Placeholder Pages
-const DeliveryDetail = () => <div className="p-8"><h1>Teslim Detayı</h1></div>;
+import DeliveryDetail from './pages/DeliveryDetail';
 
 function App() {
   return (

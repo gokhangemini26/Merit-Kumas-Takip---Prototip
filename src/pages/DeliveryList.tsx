@@ -8,7 +8,8 @@ import {
   CheckCircle2, 
   Clock, 
   AlertTriangle,
-  FileDown
+  FileDown,
+  Trash2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Delivery } from '@/types';
@@ -107,12 +108,31 @@ export default function DeliveryList() {
                     </Badge>
                   </div>
 
-                  <div>
+                  <div className="flex justify-between items-start">
                     <h3 className="font-bold text-lg text-slate-900 group-hover:text-blue-600 transition-colors">{delivery.delivery_no}</h3>
-                    <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
-                      <FileDown size={14} /> {delivery.waybill_no || 'İrsaliye Yok'}
-                    </p>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-slate-300 hover:text-red-500 rounded-full"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Bu teslimat kaydını silmek istediğinize emin misiniz?')) {
+                          try {
+                            const { error } = await supabase.from('deliveries').delete().eq('id', delivery.id);
+                            if (error) throw error;
+                            window.location.reload(); // Quick refresh
+                          } catch (err: any) {
+                            alert('Hata: ' + err.message);
+                          }
+                        }
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
                   </div>
+                  <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
+                    <FileDown size={14} /> {delivery.waybill_no || 'İrsaliye Yok'}
+                  </p>
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                     <div className="text-xs text-slate-400 font-medium">TESLİM TARİHİ</div>

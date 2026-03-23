@@ -126,7 +126,18 @@ export default function OrderList() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Düzenle</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600" onClick={(e) => e.stopPropagation()}>Siparişi İptal Et</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600" onClick={async (e) => {
+              e.stopPropagation();
+              if (window.confirm('Bu siparişi silmek istediğinize emin misiniz? Bağlı tüm teslimatlar ve veriler de silinecektir.')) {
+                try {
+                  const { error } = await supabase.from('orders').delete().eq('id', info.row.original.id);
+                  if (error) throw error;
+                  fetchOrders();
+                } catch (err: any) {
+                  alert('Sipariş silinirken hata: ' + err.message);
+                }
+              }
+            }}>Siparişi Sil</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),

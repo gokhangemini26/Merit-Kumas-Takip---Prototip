@@ -11,7 +11,8 @@ import {
   FileText,
   AlertCircle,
   Plus,
-  FileDown
+  FileDown,
+  Trash2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { OrderWithItems, OrderStatus } from '@/types';
@@ -116,6 +117,21 @@ export default function OrderDetail() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100 gap-2" 
+            onClick={async () => {
+              if (window.confirm('Bu siparişi silmek istediğinize emin misiniz? Bağlı tüm teslimatlar silinecektir.')) {
+                try {
+                  const { error } = await supabase.from('orders').delete().eq('id', id);
+                  if (error) throw error;
+                  navigate('/siparisler');
+                } catch (err: any) {
+                  alert('Sipariş silinirken hata: ' + err.message);
+                }
+              }
+            }}
+          >
+            <Trash2 size={16} /> Siparişi Sil
+          </Button>
           <Button variant="outline" className="gap-2 btn-animate bg-white" onClick={() => order && exportDeliveryTemplate(order)}>
             <FileDown size={16} /> Excel Şablon İndir
           </Button>
