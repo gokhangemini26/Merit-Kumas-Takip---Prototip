@@ -123,7 +123,7 @@ export default function Dashboard() {
           trend="+5.4%" 
           trendUp={true}
           color="orange"
-          onClick={() => navigate('/teslimatlar')}
+          onClick={() => navigate('/teslimler')}
         />
         <KPIItem 
           title="Bekleyen Ödemeler" 
@@ -287,7 +287,7 @@ export default function Dashboard() {
               title="Bekleyen Teslimatlar" 
               desc="Onay bekleyen 5 yeni teslimat formu var." 
               color="blue"
-              onClick={() => navigate('/teslimatlar')}
+              onClick={() => navigate('/teslimler')}
             />
             <AlertItem 
               icon={CheckCircle2} 
