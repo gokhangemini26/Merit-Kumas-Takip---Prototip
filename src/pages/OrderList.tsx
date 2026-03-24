@@ -110,31 +110,34 @@ export default function OrderList() {
       id: 'actions',
       header: 'İşlemler',
       cell: info => (
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={() => {}}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
+            <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
             <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
-            <DropdownMenuItem onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/siparisler/${info.row.original.id}`);
-            }}>
+            <DropdownMenuItem onClick={() => navigate(`/siparisler/${info.row.original.id}`)}>
               Detayı Görüntüle
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Düzenle</DropdownMenuItem>
+            <DropdownMenuItem>Düzenle</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600" onClick={async (e) => {
-              e.stopPropagation();
-              if (window.confirm('Bu siparişi silmek istediğinize emin misiniz? Bağlı tüm teslimatlar ve veriler de silinecektir.')) {
+            <DropdownMenuItem className="text-red-600" onClick={async () => {
+              const orderId = info.row.original.id;
+              if (window.confirm('Bu siparişi silmek istediğinize emin misiniz? Bağlı tüm ödemeler silinecek, teslimatlar ise siparişten ayrılacaktır.')) {
                 try {
-                  const { error } = await supabase.from('orders').delete().eq('id', info.row.original.id);
+                  setLoading(true);
+                  // Delete the order (associated payments and delivery item links will be handled by DB constraints)
+                  const { error } = await supabase.from('orders').delete().eq('id', orderId);
                   if (error) throw error;
+                  
                   fetchOrders();
+                  alert('Sipariş başarıyla silindi.');
                 } catch (err: any) {
                   alert('Sipariş silinirken hata: ' + err.message);
+                } finally {
+                  setLoading(false);
                 }
               }
             }}>Siparişi Sil</DropdownMenuItem>

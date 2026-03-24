@@ -93,7 +93,7 @@ CREATE TABLE deliveries (
 CREATE TABLE delivery_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   delivery_id UUID NOT NULL REFERENCES deliveries(id) ON DELETE CASCADE,
-  order_item_id UUID REFERENCES order_items(id), -- Eşleştirme
+  order_item_id UUID REFERENCES order_items(id) ON DELETE SET NULL, -- Eşleştirme
   model_code TEXT NOT NULL,
   color_name TEXT NOT NULL,
   fabric_detail TEXT,
@@ -107,7 +107,7 @@ CREATE TABLE delivery_items (
 -- 9. Ödemeler
 CREATE TABLE payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id UUID NOT NULL REFERENCES orders(id),
+  order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   payment_date DATE,
   amount NUMERIC(12,2) NOT NULL,
   currency TEXT DEFAULT 'TRY',

@@ -113,16 +113,19 @@ export default function DeliveryList() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 text-slate-300 hover:text-red-500 rounded-full"
+                      className="h-8 w-8 text-slate-300 hover:text-red-500 rounded-full bg-white/50 backdrop-blur-sm shadow-sm"
                       onClick={async (e) => {
+                        e.preventDefault();
                         e.stopPropagation();
+                        console.log('Delete clicked for delivery:', delivery.id);
                         if (window.confirm('Bu teslimat kaydını silmek istediğinize emin misiniz?')) {
                           try {
                             const { error } = await supabase.from('deliveries').delete().eq('id', delivery.id);
                             if (error) throw error;
-                            window.location.reload(); // Quick refresh
+                            window.location.reload();
                           } catch (err: any) {
                             alert('Hata: ' + err.message);
+                            console.error(err);
                           }
                         }
                       }}

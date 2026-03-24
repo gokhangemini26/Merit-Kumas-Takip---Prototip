@@ -18,8 +18,8 @@ export function generateDeliveryNo(): string {
   return `TES-${year}-${random}`;
 }
 
-export function calculatePaymentDueDate(orderDate: string | Date, termDays: number): string {
-  const date = new Date(orderDate);
+export function calculatePaymentDueDate(baseDate: string | Date, termDays: number): string {
+  const date = new Date(baseDate);
   date.setDate(date.getDate() + termDays);
   return date.toISOString().split('T')[0];
 }

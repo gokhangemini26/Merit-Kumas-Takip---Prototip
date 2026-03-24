@@ -129,12 +129,13 @@ export default function OrderForm() {
   const supplierId = watch('supplier_id');
   const deliveryDueDate = watch('delivery_due_date');
 
-  // Auto-calculate payment due date
+  // Auto-calculate payment due date based on delivery_due_date (Tahmini Teslim Tarihi)
   React.useEffect(() => {
-    if (orderDate && paymentTermDays !== undefined) {
-      setValue('payment_due_date', calculatePaymentDueDate(orderDate, paymentTermDays));
+    const baseDate = deliveryDueDate || orderDate;
+    if (baseDate && paymentTermDays !== undefined) {
+      setValue('payment_due_date', calculatePaymentDueDate(baseDate, paymentTermDays));
     }
-  }, [orderDate, paymentTermDays, setValue]);
+  }, [orderDate, deliveryDueDate, paymentTermDays, setValue]);
 
   const onSubmit = async (data: OrderFormValues) => {
     try {

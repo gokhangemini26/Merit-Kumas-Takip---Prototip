@@ -119,13 +119,20 @@ export default function OrderDetail() {
         <div className="flex gap-2">
           <Button variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100 gap-2" 
             onClick={async () => {
-              if (window.confirm('Bu siparişi silmek istediğinize emin misiniz? Bağlı tüm teslimatlar silinecektir.')) {
+              if (window.confirm('Bu siparişi silmek istediğinize emin misiniz? Bağlı tüm ödemeler silinecek, teslimatlar ise siparişten ayrılacaktır.')) {
                 try {
-                  const { error } = await supabase.from('orders').delete().eq('id', id);
+                  setLoading(true);
+                  const orderId = id;
+                  // Delete the order (associated payments and delivery item links will be handled by DB constraints)
+                  const { error } = await supabase.from('orders').delete().eq('id', orderId);
                   if (error) throw error;
+                  
+                  alert('Sipariş başarıyla silindi.');
                   navigate('/siparisler');
                 } catch (err: any) {
                   alert('Sipariş silinirken hata: ' + err.message);
+                } finally {
+                  setLoading(false);
                 }
               }
             }}
